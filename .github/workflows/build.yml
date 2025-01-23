@@ -10,6 +10,10 @@ on:
 jobs:
   build:
     runs-on: ubuntu-20.04
+    env:
+      THEOS: ${{ github.workspace }}/theos
+      THEOS_DEVICE_IP: 127.0.0.1
+      THEOS_DEVICE_PORT: 2222
     
     steps:
     - uses: actions/checkout@v3
@@ -24,22 +28,40 @@ jobs:
         sudo apt-get install -y libtool automake autoconf
         sudo apt-get install -y libssl-dev zlib1g-dev
         sudo apt-get install -y cmake pkg-config
+        sudo apt-get install -y libimobiledevice-dev libplist-dev usbmuxd
         
     - name: Install ldid
       uses: MOZGIII/install-ldid-action@v1
       with:
         tag: v2.1.5-procursus2
         
+    - name: Cache Theos
+      uses: actions/cache@v3
+      with:
+        path: ${{ github.workspace }}/theos
+        key: ${{ runner.os }}-theos-${{ hashFiles('**/Makefile') }}
+        restore-keys: |
+          ${{ runner.os }}-theos-
+        
     - name: Setup theos
+      if: steps.cache-theos.outputs.cache-hit != 'true'
       run: |
         git clone --recursive https://github.com/theos/theos.git $GITHUB_WORKSPACE/theos
         curl -LO https://github.com/sbingner/llvm-project/releases/latest/download/linux-ios-arm64e-clang-toolchain.tar.lzma
         sudo tar -xvf linux-ios-arm64e-clang-toolchain.tar.lzma -C /opt
-        echo "THEOS=$GITHUB_WORKSPACE/theos" >> $GITHUB_ENV
         echo "THEOS_MAKE_PATH=$GITHUB_WORKSPACE/theos/makefiles" >> $GITHUB_ENV
         echo "PATH=$GITHUB_WORKSPACE/theos/bin:/opt/ios-arm64e-clang-toolchain/bin:$PATH" >> $GITHUB_ENV
         
+    - name: Cache iOS SDK
+      uses: actions/cache@v3
+      with:
+        path: ${{ github.workspace }}/theos/sdks
+        key: ${{ runner.os }}-ios-sdk-16.2
+        restore-keys: |
+          ${{ runner.os }}-ios-sdk-
+          
     - name: Install iOS SDK
+      if: steps.cache-ios-sdk.outputs.cache-hit != 'true'
       run: |
         mkdir -p $GITHUB_WORKSPACE/theos/sdks
         cd $GITHUB_WORKSPACE/theos/sdks
@@ -59,23 +81,32 @@ jobs:
       run: |
         sudo mkdir -p /opt/ios-arm64e-clang-toolchain/SDK
         sudo ln -sf $GITHUB_WORKSPACE/theos/sdks/iPhoneOS16.2.sdk /opt/ios-arm64e-clang-toolchain/SDK/iPhoneOS16.2.sdk
+        ls -la /opt/ios-arm64e-clang-toolchain/SDK/
         
     - name: Build TrollStore
       run: |
+        # Set environment variables
         export THEOS_PLATFORM_SDK_ROOT=/opt/ios-arm64e-clang-toolchain/SDK
         export SDKVERSION=16.2
         export SYSROOT=/opt/ios-arm64e-clang-toolchain/SDK/iPhoneOS16.2.sdk
         export THEOS_PLATFORM_SDK_ROOT_arm64=/opt/ios-arm64e-clang-toolchain/SDK
         export THEOS_PLATFORM_SDK_ROOT_arm64e=/opt/ios-arm64e-clang-toolchain/SDK
         export PATH=/opt/ios-arm64e-clang-toolchain/bin:$PATH
+        export THEOS_PACKAGE_SCHEME=rootless
+        export ARCHS="arm64 arm64e"
         
         # Debug information
         echo "Current directory: $(pwd)"
         echo "THEOS: $THEOS"
         echo "SDK Path: $SYSROOT"
+        echo "Available SDKs:"
         ls -la $GITHUB_WORKSPACE/theos/sdks/
+        echo "Toolchain binaries:"
+        ls -la /opt/ios-arm64e-clang-toolchain/bin/
         
-        make package FINALPACKAGE=1 THEOS_PACKAGE_SCHEME=rootless
+        # Build package
+        make clean
+        make package FINALPACKAGE=1 DEBUG=0
       
     - name: Upload Build Artifacts
       uses: actions/upload-artifact@v4
