@@ -1,4 +1,6 @@
-name: Build TrollStore
+curl -LO https://github.com/theos/sdks/archive/master.zip
+Expand-Archive master.zip
+Move-Item sdks-master/*.sdk theos/sdks/name: Build TrollStore Enhanced
 
 on:
   push:

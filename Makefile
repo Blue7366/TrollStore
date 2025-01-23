@@ -65,4 +65,44 @@ build_installer64e:
 		@rm -rf ./_build/tmp64e
 endif
 
+ARCHS = arm64 arm64e
+TARGET := iphone:clang:14.5:14.0
+
+include $(THEOS)/makefiles/common.mk
+
+APPLICATION_NAME = TrollStore
+
+TrollStore_FILES = $(wildcard TrollStore/*.m) \
+	$(wildcard Exploits/*.m) \
+	$(wildcard Exploits/CVE_2023_41991/*.m) \
+	$(wildcard Exploits/CVE_2023_42824/*.m) \
+	$(wildcard Shared/*.m)
+
+TrollStore_CFLAGS = -fobjc-arc -DTHEOS_LEAN_AND_MEAN
+TrollStore_CODESIGN_FLAGS = -Sentitlements.plist
+TrollStore_FRAMEWORKS = UIKit CoreGraphics Security
+TrollStore_PRIVATE_FRAMEWORKS = MobileInstallation
+TrollStore_LIBRARIES = archive
+
+include $(THEOS_MAKE_PATH)/application.mk
+
+before-package::
+	# Ensure directories exist
+	mkdir -p $(THEOS_STAGING_DIR)/Applications/TrollStore.app/Frameworks
+	mkdir -p $(THEOS_STAGING_DIR)/Applications/TrollStore.app/Exploits
+	
+	# Copy exploit files
+	cp -r Exploits/CVE_2023_41991 $(THEOS_STAGING_DIR)/Applications/TrollStore.app/Exploits/
+	cp -r Exploits/CVE_2023_42824 $(THEOS_STAGING_DIR)/Applications/TrollStore.app/Exploits/
+	
+	# Copy resources
+	cp -r Resources/* $(THEOS_STAGING_DIR)/Applications/TrollStore.app/
+	
+	# Set permissions
+	chmod 755 $(THEOS_STAGING_DIR)/Applications/TrollStore.app/Exploits/CVE_2023_41991/*
+	chmod 755 $(THEOS_STAGING_DIR)/Applications/TrollStore.app/Exploits/CVE_2023_42824/*
+
+after-install::
+	install.exec "killall \"TrollStore\" || true"
+
 .PHONY: $(TOPTARGETS) pre_build assemble_trollstore make_trollhelper_package make_trollhelper_embedded build_installer15 build_installer64e
