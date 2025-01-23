@@ -9,72 +9,40 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+    - uses: actions/checkout@v2
       with:
         submodules: 'recursive'
     
-    - name: Install system dependencies
+    - name: Install dependencies
       run: |
-        # Update package lists
         sudo apt-get update
+        sudo apt-get install -y clang build-essential git wget
+        sudo apt-get install -y libtool automake autoconf
         
-        # Install build dependencies
-        sudo apt-get install -y \
-          clang \
-          build-essential \
-          git \
-          wget \
-          curl \
-          libtool \
-          automake \
-          autoconf \
-          lzma \
-          xz-utils \
-          cmake \
-          pkg-config \
-          libssl-dev \
-          libxml2-dev \
-          libusbmuxd-dev \
-          libimobiledevice-dev \
-          libplist-dev \
-          libplist++-dev \
-          usbmuxd
-          
     - name: Install ldid
       uses: MOZGIII/install-ldid-action@v1
       with:
         tag: v2.1.5-procursus2
         
-    - name: Setup Theos
+    - name: Setup theos
       run: |
-        # Clone specific version of Theos known to work
-        git clone --single-branch --branch 1.0 https://github.com/theos/theos.git $GITHUB_WORKSPACE/theos
-        
-        # Install SDK
-        curl -LO https://github.com/theos/sdks/archive/refs/heads/master.zip
-        unzip -q master.zip
-        mkdir -p $GITHUB_WORKSPACE/theos/sdks
-        mv sdks-master/*.sdk $GITHUB_WORKSPACE/theos/sdks/
-        
-        # Install toolchain
+        git clone --recursive https://github.com/theos/theos.git $GITHUB_WORKSPACE/theos
         curl -LO https://github.com/sbingner/llvm-project/releases/latest/download/linux-ios-arm64e-clang-toolchain.tar.lzma
-        sudo mkdir -p /opt/ios-arm64e-clang-toolchain
-        cd /opt
-        sudo tar xf $GITHUB_WORKSPACE/linux-ios-arm64e-clang-toolchain.tar.lzma
-        cd $GITHUB_WORKSPACE
-        
-        # Set environment variables
+        sudo tar -xvf linux-ios-arm64e-clang-toolchain.tar.lzma -C /opt
         echo "THEOS=$GITHUB_WORKSPACE/theos" >> $GITHUB_ENV
         echo "PATH=$GITHUB_WORKSPACE/theos/bin:/opt/ios-arm64e-clang-toolchain/bin:$PATH" >> $GITHUB_ENV
         
+    - name: Install iOS SDK
+      run: |
+        wget https://github.com/theos/sdks/archive/master.zip
+        unzip master.zip
+        sudo mv sdks-master/*.sdk $GITHUB_WORKSPACE/theos/sdks/
+        
     - name: Build TrollStore
       run: |
-        export THEOS=$GITHUB_WORKSPACE/theos
-        export PATH=$GITHUB_WORKSPACE/theos/bin:/opt/ios-arm64e-clang-toolchain/bin:$PATH
         make package FINALPACKAGE=1
       
     - name: Upload Build Artifacts
