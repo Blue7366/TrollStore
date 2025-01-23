@@ -12,15 +12,17 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         submodules: 'recursive'
+        fetch-depth: 0
     
     - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y clang build-essential git wget
+        sudo apt-get install -y clang build-essential git wget fakeroot
         sudo apt-get install -y libtool automake autoconf
+        sudo apt-get install -y libssl-dev zlib1g-dev
         
     - name: Install ldid
       uses: MOZGIII/install-ldid-action@v1
@@ -39,12 +41,23 @@ jobs:
     - name: Install iOS SDK
       run: |
         wget https://github.com/theos/sdks/archive/master.zip
-        unzip master.zip
-        sudo mv sdks-master/*.sdk $GITHUB_WORKSPACE/theos/sdks/
+        unzip master.zip -d sdks
+        sudo mkdir -p $GITHUB_WORKSPACE/theos/sdks
+        sudo mv sdks/sdks-master/*.sdk $GITHUB_WORKSPACE/theos/sdks/
+        rm -rf sdks master.zip
+        
+    - name: Prepare Build Environment
+      run: |
+        mkdir -p packages
+        chmod +x $GITHUB_WORKSPACE/theos/bin/*
+        make clean || true
         
     - name: Build TrollStore
       run: |
-        make package FINALPACKAGE=1
+        export THEOS_PLATFORM_SDK_ROOT=/opt/ios-arm64e-clang-toolchain/SDK
+        export SDKVERSION=16.2
+        export SYSROOT=/opt/ios-arm64e-clang-toolchain/SDK/iPhoneOS16.2.sdk
+        make package FINALPACKAGE=1 THEOS_PACKAGE_SCHEME=rootless
       
     - name: Upload Build Artifacts
       uses: actions/upload-artifact@v4
@@ -59,6 +72,8 @@ jobs:
       id: create_release
       if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
       uses: softprops/action-gh-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         tag_name: v${{ github.run_number }}
         name: Release v${{ github.run_number }}
@@ -70,6 +85,7 @@ jobs:
           - Real-time app modification system
           - Advanced logging and error handling
           - Environment variable control
+          - iOS 17 compatibility improvements
         draft: false
         prerelease: false
         files: |

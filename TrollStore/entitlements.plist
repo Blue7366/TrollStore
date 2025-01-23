@@ -3,28 +3,58 @@
 <plist version="1.0">
 <dict>
 	<key>application-identifier</key>
-	<string>com.opa334.TrollStore</string>
+	<string>com.opa334.TrollStore.Enhanced</string>
 	<key>platform-application</key>
 	<true/>
+	
+	<!-- File System Access -->
 	<key>com.apple.security.exception.files.absolute-path.read-write</key>
 	<array>
 		<string>/</string>
+		<string>/private/preboot/</string>
+		<string>/var/</string>
+		<string>/private/var/</string>
 	</array>
-	<key>com.apple.security.exception.iokit-user-client-class</key>
+	
+	<!-- IOKit Access -->
+	<key>com.apple.security.iokit-user-client-class</key>
 	<array>
+		<string>RootDomainUserClient</string>
+		<string>AppleSMCClient</string>
+		<string>AppleSEPUserClient</string>
 		<string>AGXDeviceUserClient</string>
 		<string>IOSurfaceRootUserClient</string>
+		<string>IOAccelContext</string>
+		<string>IOAccelDevice</string>
+		<string>IOAccelSharedUserClient</string>
+		<string>AppleUSBHostDeviceUserClient</string>
+		<string>AppleUSBHostInterfaceUserClient</string>
+		<string>IOMobileFramebufferUserClient</string>
 	</array>
+	
+	<!-- Security & Sandbox -->
 	<key>com.apple.private.security.no-sandbox</key>
 	<true/>
-	<key>com.apple.private.persona-mgmt</key>
+	<key>com.apple.private.security.container-required</key>
+	<false/>
+	<key>com.apple.private.security.no-container</key>
 	<true/>
-	<key>com.apple.private.security.container-manager</key>
+	<key>com.apple.private.security.system-mount-authority</key>
 	<true/>
-	<key>com.apple.private.coreservices.canmaplsdatabase</key>
+	<key>com.apple.private.security.storage.MobileDocuments</key>
 	<true/>
-	<key>com.apple.lsapplicationworkspace.rebuildappdatabases</key>
+	
+	<!-- Process Control -->
+	<key>task_for_pid-allow</key>
 	<true/>
+	<key>get-task-allow</key>
+	<true/>
+	<key>com.apple.system-task-ports.control</key>
+	<true/>
+	<key>com.apple.system-task-ports.token.control</key>
+	<true/>
+	
+	<!-- App Management -->
 	<key>com.apple.private.MobileContainerManager.allowed</key>
 	<true/>
 	<key>com.apple.private.MobileInstallationHelperService.InstallDaemonOpsEnabled</key>
@@ -33,7 +63,53 @@
 	<true/>
 	<key>com.apple.private.uninstall.deletion</key>
 	<true/>
-	<key>com.apple.private.security.storage.MobileDocuments</key>
+	<key>com.apple.private.security.storage.AppBundles</key>
+	<true/>
+	<key>com.apple.private.security.storage.AppDataContainers</key>
+	<true/>
+	
+	<!-- System Services -->
+	<key>com.apple.private.persona-mgmt</key>
+	<true/>
+	<key>com.apple.private.security.container-manager</key>
+	<true/>
+	<key>com.apple.private.coreservices.canmaplsdatabase</key>
+	<true/>
+	<key>com.apple.lsapplicationworkspace.rebuildappdatabases</key>
+	<true/>
+	
+	<!-- XPC Services -->
+	<key>com.apple.private.xpc.launchd.app-state-manager</key>
+	<true/>
+	<key>com.apple.private.xpc.launchd.event-monitor</key>
+	<true/>
+	<key>com.apple.private.xpc.launchd.reboot</key>
+	<true/>
+	<key>com.apple.private.xpc.launchd.userspace-reboot</key>
+	<true/>
+	
+	<!-- iOS 17 Specific Capabilities -->
+	<key>com.apple.private.security.system-application-internal</key>
+	<true/>
+	<key>com.apple.private.security.system-proc-control</key>
+	<true/>
+	<key>com.apple.private.security.container-manager-secure</key>
+	<true/>
+	<key>com.apple.private.vfs.dataless-manipulation</key>
+	<true/>
+	<key>com.apple.private.kernel.override-cpumon</key>
+	<true/>
+	<key>com.apple.private.security.storage-exempt</key>
+	<true/>
+	<key>com.apple.private.memorystatus.priority</key>
+	<integer>0</integer>
+	<key>com.apple.private.cs.debugger</key>
+	<true/>
+	
+	<!-- Additional Root Capabilities -->
+	<key>com.apple.private.amfi.can-allow-non-platform</key>
+	<true/>
+	<key>com.apple.private.spawn-subsystem-root</key>
 	<true/>
 	<key>com.apple.CommCenter.fine-grained</key>
 	<array>
@@ -43,21 +119,13 @@
 	<true/>
 	<key>com.apple.private.mobileinstall.allowedSPI</key>
 	<true/>
-	<key>com.apple.private.security.storage.AppBundles</key>
-	<true/>
-	<key>com.apple.private.security.storage.AppDataContainers</key>
-	<true/>
-	<key>task_for_pid-allow</key>
-	<true/>
-	<key>com.apple.system-task-ports</key>
-	<true/>
-	<key>com.apple.private.memorystatus</key>
-	<true/>
-	<key>com.apple.private.security.system-application</key>
-	<true/>
-	<key>com.apple.private.xpc.service-configure</key>
-	<true/>
-	<key>com.apple.private.security.disk-device-access</key>
-	<true/>
+	
+	<!-- Jailbreak Integration -->
+	<key>com.apple.security.exception.mach-lookup.global-name</key>
+	<array>
+		<string>jailbreakd</string>
+		<string>jailbreakd_safe</string>
+		<string>jailbreakd_xpc</string>
+	</array>
 </dict>
 </plist>
