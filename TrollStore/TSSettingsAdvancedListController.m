@@ -1,4 +1,5 @@
 #import "TSSettingsAdvancedListController.h"
+#import "TSUtil.h"
 #import <Preferences/PSSpecifier.h>
 
 extern NSUserDefaults* trollStoreUserDefaults();
@@ -16,7 +17,7 @@ extern NSUserDefaults* trollStoreUserDefaults();
 
 		PSSpecifier* installationMethodGroupSpecifier = [PSSpecifier emptyGroupSpecifier];
 		//installationMethodGroupSpecifier.name = @"Installation";
-		[installationMethodGroupSpecifier setProperty:@"installd:\nInstalls applications by doing a placeholder installation through installd, fixing the permissions and then adding it to icon cache.\nAdvantage: Might be slightly more persistent then the custom method in terms of icon cache reloads.\nDisadvantage: Causes some small issues with certain applications for seemingly no reason (E.g. Watusi cannot save preferences when being installed using this method).\n\nCustom (Recommended):\nInstalls applications by manually creating a bundle using MobileContainerManager, copying the app into it and adding it to icon cache.\nAdvantage: No known issues (As opposed to the Watusi issue outlined in the installd method).\nDisadvantage: Might be slightly less persistent then the installd method in terms of icon cache reloads.\n\nNOTE: In cases where installd is selected but the placeholder installation fails, TrollStore automatically falls back to using the Custom method." forKey:@"footerText"];
+		[installationMethodGroupSpecifier setProperty:@"installd:\nInstalls applications by doing a placeholder installation through installd, fixing the permissions and then adding it to icon cache.\nAdvantage: Might be slightly more persistent than the custom method in terms of icon cache reloads.\nDisadvantage: Causes some small issues with certain applications for seemingly no reason (E.g. Watusi cannot save preferences when being installed using this method).\n\nCustom (Recommended):\nInstalls applications by manually creating a bundle using MobileContainerManager, copying the app into it and adding it to icon cache.\nAdvantage: No known issues (As opposed to the Watusi issue outlined in the installd method).\nDisadvantage: Might be slightly less persistent then the installd method in terms of icon cache reloads.\n\nNOTE: In cases where installd is selected but the placeholder installation fails, TrollStore automatically falls back to using the Custom method." forKey:@"footerText"];
 		[_specifiers addObject:installationMethodGroupSpecifier];
 
 		PSSpecifier* installationMethodSpecifier = [PSSpecifier preferenceSpecifierNamed:@"Installation Method"
@@ -39,7 +40,7 @@ extern NSUserDefaults* trollStoreUserDefaults();
 											edit:nil];
 		[installationMethodSegmentSpecifier setProperty:@YES forKey:@"enabled"];
 		installationMethodSegmentSpecifier.identifier = @"installationMethodSegment";
-		[installationMethodSegmentSpecifier setProperty:@"com.opa334.TrollStore" forKey:@"defaults"];
+		[installationMethodSegmentSpecifier setProperty:APP_ID forKey:@"defaults"];
 		[installationMethodSegmentSpecifier setProperty:@"installationMethod" forKey:@"key"];
 		installationMethodSegmentSpecifier.values = @[@0, @1];
 		installationMethodSegmentSpecifier.titleDictionary = @{@0 : @"installd", @1 : @"Custom"};
@@ -71,7 +72,7 @@ extern NSUserDefaults* trollStoreUserDefaults();
 											edit:nil];
 		[uninstallationMethodSegmentSpecifier setProperty:@YES forKey:@"enabled"];
 		uninstallationMethodSegmentSpecifier.identifier = @"uninstallationMethodSegment";
-		[uninstallationMethodSegmentSpecifier setProperty:@"com.opa334.TrollStore" forKey:@"defaults"];
+		[uninstallationMethodSegmentSpecifier setProperty:APP_ID forKey:@"defaults"];
 		[uninstallationMethodSegmentSpecifier setProperty:@"uninstallationMethod" forKey:@"key"];
 		uninstallationMethodSegmentSpecifier.values = @[@0, @1];
 		uninstallationMethodSegmentSpecifier.titleDictionary = @{@0 : @"installd", @1 : @"Custom"};

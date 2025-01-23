@@ -104,7 +104,8 @@ UIImage* imageWithSize(UIImage* image, CGSize size)
 	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(reloadTable) name:@"ApplicationsChanged" object:nil];
 }
 
-- (void)viewDidLoad {
+- (void)viewDidLoad
+{
 	[super viewDidLoad];
 	
 	self.tableView.allowsMultipleSelectionDuringEditing = NO;
@@ -187,7 +188,7 @@ UIImage* imageWithSize(UIImage* image, CGSize size)
 	[TSInstallationController presentInstallationAlertIfEnabledForFile:pathToIPA isRemoteInstall:NO completion:nil];
 }
 
-- (void)openAppPressedForRowAtIndexPath:(NSIndexPath*)indexPath
+- (void)openAppPressedForRowAtIndexPath:(NSIndexPath*)indexPath enableJIT:(BOOL)enableJIT
 {
 	TSApplicationsManager* appsManager = [TSApplicationsManager sharedInstance];
 
@@ -210,6 +211,17 @@ UIImage* imageWithSize(UIImage* image, CGSize size)
 
 		[didFailController addAction:cancelAction];
 		[TSPresentationDelegate presentViewController:didFailController animated:YES completion:nil];
+	}
+	else if (enableJIT)
+	{
+		int ret = [appsManager enableJITForBundleID:appId];
+		if (ret != 0)
+		{
+			UIAlertController* errorAlert = [UIAlertController alertControllerWithTitle:@"Error" message:[NSString stringWithFormat:@"Error enabling JIT: trollstorehelper returned %d", ret] preferredStyle:UIAlertControllerStyleAlert];
+			UIAlertAction* closeAction = [UIAlertAction actionWithTitle:@"Close" style:UIAlertActionStyleDefault handler:nil];
+			[errorAlert addAction:closeAction];
+			[TSPresentationDelegate presentViewController:errorAlert animated:YES completion:nil];
+		}
 	}
 }
 
@@ -329,11 +341,13 @@ UIImage* imageWithSize(UIImage* image, CGSize size)
 
 #pragma mark - Table view data source
 
-- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
+{
 	return 1;
 }
 
-- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
 	return _cachedAppInfos.count;
 }
 
@@ -342,7 +356,8 @@ UIImage* imageWithSize(UIImage* image, CGSize size)
 	[self reloadTable];
 }
 
-- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
 	UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"ApplicationCell"];
 	if(!cell) {
 		cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:@"ApplicationCell"];
@@ -375,14 +390,15 @@ UIImage* imageWithSize(UIImage* image, CGSize size)
 			cell.imageView.image = _placeholderIcon;
 			dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^
 			{
-				//usleep(1000 * 5000); // (test delay for debugging)
 				UIImage* iconImage = imageWithSize([UIImage _applicationIconImageForBundleIdentifier:appId format:iconFormatToUse() scale:[UIScreen mainScreen].scale], _placeholderIcon.size);
 				_cachedIcons[appId] = iconImage;
 				dispatch_async(dispatch_get_main_queue(), ^{
-					if([tableView.indexPathsForVisibleRows containsObject:indexPath])
+					NSIndexPath *curIndexPath = [NSIndexPath indexPathForRow:[_cachedAppInfos indexOfObject:appInfo] inSection:0];
+					UITableViewCell *curCell = [tableView cellForRowAtIndexPath:curIndexPath];
+					if(curCell)
 					{
-						cell.imageView.image = iconImage;
-						[cell setNeedsLayout];
+						curCell.imageView.image = iconImage;
+						[curCell setNeedsLayout];
 					}
 				});
 			});
@@ -400,7 +416,8 @@ UIImage* imageWithSize(UIImage* image, CGSize size)
 	return cell;
 }
 
-- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
 	return 80.0f;
 }
 
@@ -423,10 +440,20 @@ UIImage* imageWithSize(UIImage* image, CGSize size)
 
 	UIAlertAction* openAction = [UIAlertAction actionWithTitle:@"Open" style:UIAlertActionStyleDefault handler:^(UIAlertAction* action)
 	{
-		[self openAppPressedForRowAtIndexPath:indexPath];
+		[self openAppPressedForRowAtIndexPath:indexPath enableJIT:NO];
 		[self deselectRow];
 	}];
 	[appSelectAlert addAction:openAction];
+
+	if ([appInfo isDebuggable])
+	{
+		UIAlertAction* openWithJITAction = [UIAlertAction actionWithTitle:@"Open with JIT" style:UIAlertActionStyleDefault handler:^(UIAlertAction* action)
+		{
+			[self openAppPressedForRowAtIndexPath:indexPath enableJIT:YES];
+			[self deselectRow];
+		}];
+		[appSelectAlert addAction:openWithJITAction];
+	}
 
 	UIAlertAction* showDetailsAction = [UIAlertAction actionWithTitle:@"Show Details" style:UIAlertActionStyleDefault handler:^(UIAlertAction* action)
 	{
@@ -475,13 +502,25 @@ UIImage* imageWithSize(UIImage* image, CGSize size)
 	[TSPresentationDelegate presentViewController:appSelectAlert animated:YES completion:nil];
 }
 
-- (void)applicationsDidInstall:(id)arg1
+- (void)purgeCachedIconsForApps:(NSArray <LSApplicationProxy *>*)apps
 {
+	for (LSApplicationProxy *appProxy in apps) {
+		NSString *appId = appProxy.bundleIdentifier;
+		if (_cachedIcons[appId]) {
+			[_cachedIcons removeObjectForKey:appId];
+		}
+	}
+}
+
+- (void)applicationsDidInstall:(NSArray <LSApplicationProxy *>*)apps
+{
+	[self purgeCachedIconsForApps:apps];
 	[self reloadTable];
 }
 
-- (void)applicationsDidUninstall:(id)arg1
+- (void)applicationsDidUninstall:(NSArray <LSApplicationProxy *>*)apps
 {
+	[self purgeCachedIconsForApps:apps];
 	[self reloadTable];
 }
 

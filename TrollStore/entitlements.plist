@@ -37,12 +37,27 @@
 	<true/>
 	<key>com.apple.CommCenter.fine-grained</key>
 	<array>
-		<string>cellular-plan</string>
-		<string>data-usage</string>
 		<string>data-allowed-write</string>
-		<string>preferences-write</string>
 	</array>
 	<key>com.apple.springboard.opensensitiveurl</key>
+	<true/>
+	<key>com.apple.private.mobileinstall.allowedSPI</key>
+	<true/>
+	<key>com.apple.private.security.storage.AppBundles</key>
+	<true/>
+	<key>com.apple.private.security.storage.AppDataContainers</key>
+	<true/>
+	<key>task_for_pid-allow</key>
+	<true/>
+	<key>com.apple.system-task-ports</key>
+	<true/>
+	<key>com.apple.private.memorystatus</key>
+	<true/>
+	<key>com.apple.private.security.system-application</key>
+	<true/>
+	<key>com.apple.private.xpc.service-configure</key>
+	<true/>
+	<key>com.apple.private.security.disk-device-access</key>
 	<true/>
 </dict>
 </plist>

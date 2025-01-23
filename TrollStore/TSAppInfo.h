@@ -6,8 +6,8 @@
 //
 
 #import <Foundation/Foundation.h>
-#import <libarchive/archive.h>
-#import <libarchive/archive_entry.h>
+#import <archive.h>
+#import <archive_entry.h>
 @import UIKit;
 
 @interface TSAppInfo : NSObject
@@ -50,6 +50,7 @@
 - (NSAttributedString*)detailedInfoTitle;
 - (NSAttributedString*)detailedInfoDescription;
 //- (UIImage*)image;
+- (BOOL)isDebuggable;
 - (void)log;
 
 @end

@@ -1,0 +1,59 @@
+name: Build TrollStore
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v2
+    
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y clang build-essential git wget
+        sudo apt-get install -y libtool automake autoconf
+        
+    - name: Setup theos
+      run: |
+        git clone --recursive https://github.com/theos/theos.git $GITHUB_WORKSPACE/theos
+        curl -LO https://github.com/sbingner/llvm-project/releases/latest/download/linux-ios-arm64e-clang-toolchain.tar.lzma
+        sudo tar -xvf linux-ios-arm64e-clang-toolchain.tar.lzma -C /opt
+        echo "THEOS=$GITHUB_WORKSPACE/theos" >> $GITHUB_ENV
+        echo "PATH=$GITHUB_WORKSPACE/theos/bin:/opt/ios-arm64e-clang-toolchain/bin:$PATH" >> $GITHUB_ENV
+        
+    - name: Install iOS SDK
+      run: |
+        wget https://github.com/theos/sdks/archive/master.zip
+        unzip master.zip
+        sudo mv sdks-master/*.sdk $GITHUB_WORKSPACE/theos/sdks/
+        
+    - name: Build TrollStore
+      run: |
+        make package FINALPACKAGE=1
+        
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: v${{ github.run_number }}
+        release_name: Release v${{ github.run_number }}
+        draft: false
+        prerelease: false
+        
+    - name: Upload Release Asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./packages/com.opa334.trollstore_2.0_iphoneos-arm.deb
+        asset_name: TrollStore.deb
+        asset_content_type: application/vnd.debian.binary-package

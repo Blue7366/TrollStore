@@ -42,7 +42,7 @@ extern NSUserDefaults* trollStoreUserDefaults();
         errorDescription = @"Failed to create container for app bundle.";
         break;
         case 171:
-        errorDescription = @"A non-TrollStore app with the same identifier is already installed. If you are absolutely sure it is not, you can force install it.";
+        errorDescription = @"A non "APP_NAME@" or a "OTHER_APP_NAME@" app with the same identifier is already installed. If you are absolutely sure it is not, you can force install it.";
         break;
         case 172:
         errorDescription = @"The app does not contain an Info.plist file.";
@@ -53,8 +53,14 @@ extern NSUserDefaults* trollStoreUserDefaults();
         case 174:
         errorDescription = @"The app's main executable does not exist.";
         break;
-        case 175:
-        errorDescription = @"Failed to sign the app. ldid returned a non zero status code.";
+        case 175: {
+            //if (@available(iOS 16, *)) {
+            //    errorDescription = @"Failed to sign the app.";
+            //}
+            //else {
+                errorDescription = @"Failed to sign the app. ldid returned a non zero status code.";
+            //}
+        }
         break;
         case 176:
         errorDescription = @"The app's Info.plist is missing required values.";
@@ -68,6 +74,23 @@ extern NSUserDefaults* trollStoreUserDefaults();
         case 179:
         errorDescription = @"The app you tried to install has the same identifier as a system app already installed on the device. The installation has been prevented to protect you from possible bootloops or other issues.";
         break;
+        case 180:
+        errorDescription = @"The app you tried to install has an encrypted main binary, which cannot have the CoreTrust bypass applied to it. Please ensure you install decrypted apps.";
+        break;
+        case 181:
+        errorDescription = @"Failed to add app to icon cache.";
+        break;
+        case 182:
+        errorDescription = @"The app was installed successfully, but requires developer mode to be enabled to run. After rebooting, select \"Turn On\" to enable developer mode.";
+        break;
+        case 183:
+        errorDescription = @"Failed to enable developer mode.";
+        break;
+        case 184:
+        errorDescription = @"The app was installed successfully, but has additional binaries that are encrypted (e.g. extensions, plugins). The app itself should work, but you may experience broken functionality as a result.";
+        break;
+        case 185:
+        errorDescription = @"Failed to sign the app. The CoreTrust bypass returned a non zero status code.";
     }
 
     NSError* error = [NSError errorWithDomain:TrollStoreErrorDomain code:code userInfo:@{NSLocalizedDescriptionKey : errorDescription}];
@@ -157,6 +180,11 @@ extern NSUserDefaults* trollStoreUserDefaults();
 - (BOOL)openApplicationWithBundleID:(NSString *)appId
 {
     return [[LSApplicationWorkspace defaultWorkspace] openApplicationWithBundleID:appId];
+}
+
+- (int)enableJITForBundleID:(NSString *)appId
+{
+    return spawnRoot(rootHelperPath(), @[@"enable-jit", appId], nil, nil);
 }
 
 - (int)changeAppRegistration:(NSString*)appPath toState:(NSString*)newState

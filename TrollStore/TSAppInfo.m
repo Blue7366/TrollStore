@@ -849,16 +849,37 @@ extern UIImage* imageWithSize(UIImage* image, CGSize size);
 	__block NSMutableArray* accessibleContainers = [NSMutableArray new]; //array by design, should be ordered
 	if(!unrestrictedContainerAccess)
 	{
-		[self enumerateAllInfoDictionaries:^(NSString *key, NSObject *value, BOOL *stop) {
-			if([key isEqualToString:@"CFBundleIdentifier"])
+		__block NSString *dataContainer = nil;
+
+		// If com.apple.private.security.container-required Entitlement is a string, prefer it to CFBundleIdentifier
+		[self enumerateAllEntitlements:^(NSString *key, NSObject *value, BOOL *stop) {
+			if([key isEqualToString:@"com.apple.private.security.container-required"])
 			{
-				NSString* valueStr = (NSString*)value;
-				if([valueStr isKindOfClass:NSString.class])
+				NSString* valueString = (NSString*)value;
+				if(valueString && [valueString isKindOfClass:NSString.class])
 				{
-					[accessibleContainers addObject:valueStr];
+					dataContainer = valueString;
 				}
 			}
 		}];
+
+		// Else take CFBundleIdentifier
+		if (!dataContainer) {
+			[self enumerateAllInfoDictionaries:^(NSString *key, NSObject *value, BOOL *stop) {
+				if([key isEqualToString:@"CFBundleIdentifier"])
+				{
+					NSString* valueStr = (NSString*)value;
+					if([valueStr isKindOfClass:NSString.class])
+					{
+						dataContainer = valueStr;
+					}
+				}
+			}];
+		}
+
+		if (dataContainer) {
+			[accessibleContainers addObject:dataContainer];
+		}
 
 		[self enumerateAllEntitlements:^(NSString *key, NSObject *value, BOOL *stop)
 		{
@@ -1065,7 +1086,7 @@ extern UIImage* imageWithSize(UIImage* image, CGSize size);
 	}
 	else if(isPlatformApplication && isUnsandboxed)
 	{
-		[description appendAttributedString:[[NSAttributedString alloc] initWithString:@"\nThe app can spawn arbitary binaries as the mobile user." attributes:bodyWarningAttributes]];
+		[description appendAttributedString:[[NSAttributedString alloc] initWithString:@"\nThe app can spawn arbitrary binaries as the mobile user." attributes:bodyWarningAttributes]];
 	}
 	else
 	{
@@ -1144,5 +1165,23 @@ extern UIImage* imageWithSize(UIImage* image, CGSize size);
 	}];
 }
 
+- (BOOL)isDebuggable
+{
+	[self loadEntitlements];
+	__block BOOL debuggable = NO;
+	[self enumerateAllEntitlements:^(NSString *key, NSObject *value, BOOL *stop)
+	{
+		if([key isEqualToString:@"get-task-allow"])
+		{
+			NSNumber* valueNum = (NSNumber*)value;
+			if(valueNum && [valueNum isKindOfClass:NSNumber.class])
+			{
+				debuggable = valueNum.boolValue;
+				*stop = YES;
+			}
+		}
+	}];
+	return debuggable;
+}
 
 @end
