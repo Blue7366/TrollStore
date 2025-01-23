@@ -1,152 +1,62 @@
-name: Build TrollStore Enhanced
+name: Build TrollStore
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main ]
   pull_request:
-    branches: [ main, master ]
-  workflow_dispatch:
+    branches: [ main ]
 
 jobs:
   build:
-    runs-on: ubuntu-20.04
-    env:
-      THEOS: ${{ github.workspace }}/theos
-      THEOS_DEVICE_IP: 127.0.0.1
-      THEOS_DEVICE_PORT: 2222
-      THEOS_PLATFORM_SDK_ROOT: /opt/ios-arm64e-clang-toolchain/SDK
-      SDKVERSION: 16.2
-      PATH: ${{ github.workspace }}/theos/bin:/opt/ios-arm64e-clang-toolchain/bin:$PATH
+    runs-on: macos-latest
     
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v2
       with:
         submodules: 'recursive'
         fetch-depth: 0
     
-    - name: Install dependencies
+    # Verify local tools
+    - name: Verify Build Tools
       run: |
-        sudo apt-get update
-        sudo apt-get install -y clang build-essential git wget fakeroot
-        sudo apt-get install -y libtool automake autoconf
-        sudo apt-get install -y libssl-dev zlib1g-dev
-        sudo apt-get install -y cmake pkg-config
-        sudo apt-get install -y libimobiledevice-dev libplist-dev usbmuxd
-        sudo apt-get install -y xz-utils lzma
-        
-    - name: Install ldid
-      uses: MOZGIII/install-ldid-action@v1
-      with:
-        tag: v2.1.5-procursus2
-        
-    - name: Cache Theos
-      id: cache-theos
-      uses: actions/cache@v3
-      with:
-        path: ${{ github.workspace }}/theos
-        key: ${{ runner.os }}-theos-${{ hashFiles('**/Makefile') }}
-        restore-keys: |
-          ${{ runner.os }}-theos-
-        
-    - name: Setup theos
-      if: steps.cache-theos.outputs.cache-hit != 'true'
+        chmod +x bins/build_tools.sh
+        ./bins/build_tools.sh --verify
+      
+    # Setup build environment
+    - name: Setup Environment
       run: |
-        git clone --recursive https://github.com/theos/theos.git $GITHUB_WORKSPACE/theos
-        curl -LO https://github.com/sbingner/llvm-project/releases/latest/download/linux-ios-arm64e-clang-toolchain.tar.lzma
-        sudo tar -xvf linux-ios-arm64e-clang-toolchain.tar.lzma -C /opt
-        chmod +x $GITHUB_WORKSPACE/theos/bin/*
+        ./bins/build_tools.sh --setup
         
-    - name: Cache iOS SDK
-      id: cache-ios-sdk
-      uses: actions/cache@v3
-      with:
-        path: ${{ github.workspace }}/theos/sdks
-        key: ${{ runner.os }}-ios-sdk-16.2
-        restore-keys: |
-          ${{ runner.os }}-ios-sdk-
-          
-    - name: Install iOS SDK
-      if: steps.cache-ios-sdk.outputs.cache-hit != 'true'
-      run: |
-        mkdir -p $GITHUB_WORKSPACE/theos/sdks
-        cd $GITHUB_WORKSPACE/theos/sdks
-        wget https://github.com/theos/sdks/archive/refs/heads/master.zip -O sdks.zip
-        unzip -q sdks.zip
-        mv sdks-master/*.sdk ./
-        rm -rf sdks-master sdks.zip
-        ls -la
-        
-    - name: Prepare Build Environment
-      run: |
-        mkdir -p packages
-        chmod +x $GITHUB_WORKSPACE/theos/bin/*
-        make clean || true
-        
-        # Debug information
-        echo "Current directory: $(pwd)"
-        echo "THEOS: $THEOS"
-        echo "PATH: $PATH"
-        ls -la $GITHUB_WORKSPACE/theos/bin/
-        ls -la $GITHUB_WORKSPACE/theos/sdks/
-        
-    - name: Setup SDK Symlinks
-      run: |
-        sudo mkdir -p /opt/ios-arm64e-clang-toolchain/SDK
-        sudo ln -sf $GITHUB_WORKSPACE/theos/sdks/iPhoneOS16.2.sdk /opt/ios-arm64e-clang-toolchain/SDK/iPhoneOS16.2.sdk
-        ls -la /opt/ios-arm64e-clang-toolchain/SDK/
-        
+    # Build TrollStore
     - name: Build TrollStore
       run: |
-        # Set environment variables
-        export SYSROOT=/opt/ios-arm64e-clang-toolchain/SDK/iPhoneOS16.2.sdk
-        export THEOS_PLATFORM_SDK_ROOT_arm64=/opt/ios-arm64e-clang-toolchain/SDK
-        export THEOS_PLATFORM_SDK_ROOT_arm64e=/opt/ios-arm64e-clang-toolchain/SDK
-        export THEOS_PACKAGE_SCHEME=rootless
-        export ARCHS="arm64 arm64e"
-        export FINALPACKAGE=1
-        export DEBUG=0
+        chmod +x bins/build_enhanced.sh
+        ./bins/build_enhanced.sh
         
-        # Debug information
-        echo "Build environment:"
-        env | grep -E "THEOS|SDK|PATH"
-        echo "Available SDKs:"
-        ls -la $GITHUB_WORKSPACE/theos/sdks/
-        echo "Toolchain binaries:"
-        ls -la /opt/ios-arm64e-clang-toolchain/bin/
+    # Run tests
+    - name: Run Tests
+      run: |
+        chmod +x bins/debug_helper.sh
+        ./bins/debug_helper.sh build/TrollStore.app/TrollStore
         
-        # Build package
-        make clean
-        make package FINALPACKAGE=1 DEBUG=0 THEOS_PACKAGE_SCHEME=rootless
-      
-    - name: Upload Build Artifacts
-      uses: actions/upload-artifact@v4
+    # Create packages
+    - name: Create Packages
+      run: |
+        cd packages
+        mkdir -p Payload
+        cp -r ../build/TrollStore.app Payload/
+        zip -r TrollStore.ipa Payload
+        rm -rf Payload
+        
+    # Upload artifacts
+    - name: Upload IPA
+      uses: actions/upload-artifact@v2
       with:
-        name: TrollStore-Build
-        path: |
-          packages/*.deb
-          packages/*.ipa
-        if-no-files-found: error
+        name: TrollStore
+        path: packages/TrollStore.ipa
         
-    - name: Create Release
-      id: create_release
-      if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
-      uses: softprops/action-gh-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Upload Debug Logs
+      uses: actions/upload-artifact@v2
       with:
-        tag_name: v${{ github.run_number }}
-        name: Release v${{ github.run_number }}
-        body: |
-          TrollStore Enhanced Release
-          
-          New Features:
-          - Enhanced exploit chain with CVE-2023-42824 and CVE-2023-41991
-          - Real-time app modification system
-          - Advanced logging and error handling
-          - Environment variable control
-          - iOS 17 compatibility improvements
-        draft: false
-        prerelease: false
-        files: |
-          packages/*.deb
-          packages/*.ipa
+        name: DebugLogs
+        path: bins/debug/logs/

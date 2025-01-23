@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>BuildTools</key>
+    <dict>
+        <!-- Code Signing -->
+        <key>ldid</key>
+        <dict>
+            <key>version</key>
+            <string>2.1.5-procursus7</string>
+            <key>purpose</key>
+            <string>Code signing and entitlements management</string>
+            <key>required</key>
+            <true/>
+        </dict>
+        
+        <!-- Binary Patching -->
+        <key>insert_dylib</key>
+        <dict>
+            <key>version</key>
+            <string>1.0</string>
+            <key>purpose</key>
+            <string>Dynamic library injection</string>
+            <key>required</key>
+            <true/>
+        </dict>
+        
+        <!-- Package Management -->
+        <key>dpkg-deb</key>
+        <dict>
+            <key>version</key>
+            <string>1.21.1</string>
+            <key>purpose</key>
+            <string>Debian package creation</string>
+            <key>required</key>
+            <true/>
+        </dict>
+        
+        <!-- Binary Analysis -->
+        <key>otool</key>
+        <dict>
+            <key>version</key>
+            <string>1.0</string>
+            <key>purpose</key>
+            <string>Binary analysis and inspection</string>
+            <key>required</key>
+            <true/>
+        </dict>
+        
+        <!-- File Operations -->
+        <key>choma</key>
+        <dict>
+            <key>version</key>
+            <string>1.0</string>
+            <key>purpose</key>
+            <string>Binary modification and patching</string>
+            <key>required</key>
+            <true/>
+        </dict>
+        
+        <!-- Archive Management -->
+        <key>zip</key>
+        <dict>
+            <key>version</key>
+            <string>3.0</string>
+            <key>purpose</key>
+            <string>IPA creation and management</string>
+            <key>required</key>
+            <true/>
+        </dict>
+        
+        <key>unzip</key>
+        <dict>
+            <key>version</key>
+            <string>6.0</string>
+            <key>purpose</key>
+            <string>IPA extraction and analysis</string>
+            <key>required</key>
+            <true/>
+        </dict>
+    </dict>
+</dict>
+</plist>

@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>BinaryPatches</key>
+    <dict>
+        <!-- Sandbox Patches -->
+        <key>SandboxPatches</key>
+        <array>
+            <dict>
+                <key>name</key>
+                <string>DisableSandbox</string>
+                <key>offset</key>
+                <string>0x1000</string>
+                <key>original</key>
+                <string>0x01 0x00 0x00 0x00</string>
+                <key>patched</key>
+                <string>0x00 0x00 0x00 0x00</string>
+            </dict>
+        </array>
+        
+        <!-- JIT Patches -->
+        <key>JITPatches</key>
+        <array>
+            <dict>
+                <key>name</key>
+                <string>EnableJIT</string>
+                <key>offset</key>
+                <string>0x2000</string>
+                <key>original</key>
+                <string>0x00 0x01</string>
+                <key>patched</key>
+                <string>0x01 0x01</string>
+            </dict>
+        </array>
+        
+        <!-- Dynamic Library Patches -->
+        <key>DylibPatches</key>
+        <array>
+            <dict>
+                <key>name</key>
+                <string>EnableDylibLoading</string>
+                <key>offset</key>
+                <string>0x3000</string>
+                <key>original</key>
+                <string>0x00 0x00</string>
+                <key>patched</key>
+                <string>0x01 0x01</string>
+            </dict>
+        </array>
+        
+        <!-- Root Access Patches -->
+        <key>RootPatches</key>
+        <array>
+            <dict>
+                <key>name</key>
+                <string>EnableRoot</string>
+                <key>offset</key>
+                <string>0x4000</string>
+                <key>original</key>
+                <string>0x00 0x00 0x00 0x00</string>
+                <key>patched</key>
+                <string>0x01 0x01 0x01 0x01</string>
+            </dict>
+        </array>
+    </dict>
+    
+    <!-- Patch Configurations -->
+    <key>PatchConfigs</key>
+    <dict>
+        <key>iOS17</key>
+        <array>
+            <string>DisableSandbox</string>
+            <string>EnableJIT</string>
+            <string>EnableDylibLoading</string>
+            <string>EnableRoot</string>
+        </array>
+        
+        <key>iOS16</key>
+        <array>
+            <string>DisableSandbox</string>
+            <string>EnableJIT</string>
+            <string>EnableDylibLoading</string>
+        </array>
+    </dict>
+</dict>
+</plist>

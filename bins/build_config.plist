@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>BuildSettings</key>
+    <dict>
+        <key>ARCHS</key>
+        <array>
+            <string>arm64</string>
+            <string>arm64e</string>
+        </array>
+        <key>DEPLOYMENT_TARGET</key>
+        <string>15.0</string>
+        <key>SDKVERSION</key>
+        <string>17.0</string>
+    </dict>
+    <key>Tools</key>
+    <dict>
+        <key>ldid</key>
+        <string>2.1.5-procursus7</string>
+        <key>choma</key>
+        <string>1.0.0</string>
+        <key>unzip</key>
+        <string>6.0</string>
+    </dict>
+</dict>
+</plist>
