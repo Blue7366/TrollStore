@@ -22,25 +22,13 @@ jobs:
         # Update package lists
         sudo apt-get update
         
-        # Install required packages for adding repositories
-        sudo apt-get install -y \
-          software-properties-common \
-          gpg-agent \
-          wget \
-          curl
-          
-        # Add Procursus repository
-        curl -fsSL https://apt.procurs.us/pubkey.pgp | sudo gpg --dearmor -o /usr/share/keyrings/procursus.gpg
-        echo "deb [signed-by=/usr/share/keyrings/procursus.gpg] https://apt.procurs.us/ iphoneos-arm64/1800 main" | sudo tee /etc/apt/sources.list.d/procursus.list
-        
-        # Update again after adding new repository
-        sudo apt-get update
-        
-        # Install all required dependencies
+        # Install build dependencies
         sudo apt-get install -y \
           clang \
           build-essential \
           git \
+          wget \
+          curl \
           libtool \
           automake \
           autoconf \
@@ -54,8 +42,12 @@ jobs:
           libimobiledevice-dev \
           libplist-dev \
           libplist++-dev \
-          usbmuxd \
-          ldid
+          usbmuxd
+          
+    - name: Install ldid
+      uses: MOZGIII/install-ldid-action@v1
+      with:
+        tag: v2.1.5-procursus2
         
     - name: Setup Theos
       run: |
