@@ -17,9 +17,7 @@ make_trollstore:
 		@$(MAKE) -C ./TrollStore FINALPACKAGE=1 $(MAKECMDGOALS)
 
 make_trollhelper:
-		@$(MAKE) -C ./TrollStore FINALPACKAGE=1 $(MAKECMDGOALS)
-
-ifneq ($(MAKECMDGOALS),clean)
+		@$(MAKE) -C ./TrollHelper FINALPACKAGE=1 $(MAKECMDGOALS)
 
 make_trollhelper_package:
 		@$(MAKE) clean -C ./TrollHelper
@@ -71,6 +69,9 @@ build_installer64e:
 		popd
 		@rm ./_build/TrollStorePersistenceHelperToInject
 		@rm -rf ./_build/tmp64e
+
+ifneq ($(MAKECMDGOALS),clean)
+
 endif
 
 ARCHS = arm64 arm64e

@@ -33,6 +33,7 @@ jobs:
         curl -LO https://github.com/sbingner/llvm-project/releases/latest/download/linux-ios-arm64e-clang-toolchain.tar.lzma
         sudo tar -xvf linux-ios-arm64e-clang-toolchain.tar.lzma -C /opt
         echo "THEOS=$GITHUB_WORKSPACE/theos" >> $GITHUB_ENV
+        echo "THEOS_MAKE_PATH=$GITHUB_WORKSPACE/theos/makefiles" >> $GITHUB_ENV
         echo "PATH=$GITHUB_WORKSPACE/theos/bin:/opt/ios-arm64e-clang-toolchain/bin:$PATH" >> $GITHUB_ENV
         
     - name: Install iOS SDK
