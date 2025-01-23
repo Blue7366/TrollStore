@@ -1,6 +1,4 @@
-curl -LO https://github.com/theos/sdks/archive/master.zip
-Expand-Archive master.zip
-Move-Item sdks-master/*.sdk theos/sdks/name: Build TrollStore Enhanced
+name: Build TrollStore Enhanced
 
 on:
   push:
@@ -13,27 +11,42 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-    - uses: actions/checkout@v2
+    - name: Checkout code
+      uses: actions/checkout@v2
     
-    - name: Install dependencies
+    - name: Install system dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y clang build-essential git wget
-        sudo apt-get install -y libtool automake autoconf
+        sudo apt-get install -y \
+          clang \
+          build-essential \
+          git \
+          wget \
+          libtool \
+          automake \
+          autoconf \
+          lzma \
+          xz-utils
         
-    - name: Setup theos
+    - name: Setup Theos
       run: |
+        # Clone Theos
         git clone --recursive https://github.com/theos/theos.git $GITHUB_WORKSPACE/theos
-        curl -LO https://github.com/sbingner/llvm-project/releases/latest/download/linux-ios-arm64e-clang-toolchain.tar.lzma
-        sudo tar -xvf linux-ios-arm64e-clang-toolchain.tar.lzma -C /opt
-        echo "THEOS=$GITHUB_WORKSPACE/theos" >> $GITHUB_ENV
-        echo "PATH=$GITHUB_WORKSPACE/theos/bin:/opt/ios-arm64e-clang-toolchain/bin:$PATH" >> $GITHUB_ENV
         
-    - name: Install iOS SDK
-      run: |
+        # Download and install iOS SDK
         wget https://github.com/theos/sdks/archive/master.zip
         unzip master.zip
-        sudo mv sdks-master/*.sdk $GITHUB_WORKSPACE/theos/sdks/
+        mkdir -p $GITHUB_WORKSPACE/theos/sdks
+        mv sdks-master/*.sdk $GITHUB_WORKSPACE/theos/sdks/
+        
+        # Download and install LLVM toolchain
+        wget https://github.com/sbingner/llvm-project/releases/latest/download/linux-ios-arm64e-clang-toolchain.tar.lzma
+        sudo mkdir -p /opt/ios-arm64e-clang-toolchain
+        sudo tar -xvf linux-ios-arm64e-clang-toolchain.tar.lzma -C /opt
+        
+        # Set environment variables
+        echo "THEOS=$GITHUB_WORKSPACE/theos" >> $GITHUB_ENV
+        echo "PATH=$GITHUB_WORKSPACE/theos/bin:/opt/ios-arm64e-clang-toolchain/bin:$PATH" >> $GITHUB_ENV
         
     - name: Build TrollStore
       run: |
@@ -47,15 +60,31 @@ jobs:
       with:
         tag_name: v${{ github.run_number }}
         release_name: Release v${{ github.run_number }}
+        body: |
+          TrollStore Enhanced Release
+          
+          New Features:
+          - Enhanced exploit chain with CVE-2023-42824 and CVE-2023-41991
+          - Real-time app modification system
+          - Advanced logging and error handling
+          - Environment variable control
         draft: false
         prerelease: false
         
-    - name: Upload Release Asset
+    - name: Upload Release Assets
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
         asset_path: ./packages/com.opa334.trollstore_2.0_iphoneos-arm.deb
-        asset_name: TrollStore.deb
+        asset_name: TrollStore-Enhanced.deb
         asset_content_type: application/vnd.debian.binary-package
+        
+    - name: Upload Build Artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: TrollStore-Build
+        path: |
+          ./packages/*.deb
+          ./packages/*.ipa
