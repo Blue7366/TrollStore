@@ -11,34 +11,48 @@ jobs:
     runs-on: macos-latest
     
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
       with:
         submodules: 'recursive'
         fetch-depth: 0
     
-    # Verify local tools
-    - name: Verify Build Tools
+    # Cache theos
+    - name: Cache Theos
+      uses: actions/cache@v4
+      with:
+        path: theos
+        key: ${{ runner.os }}-theos-${{ hashFiles('**/Makefile') }}
+        restore-keys: |
+          ${{ runner.os }}-theos-
+    
+    # Cache SDKs
+    - name: Cache SDKs
+      uses: actions/cache@v4
+      with:
+        path: sdks
+        key: ${{ runner.os }}-sdks-${{ hashFiles('**/Makefile') }}
+        restore-keys: |
+          ${{ runner.os }}-sdks-
+    
+    # Setup build tools
+    - name: Setup Build Tools
       run: |
         chmod +x bins/build_tools.sh
         ./bins/build_tools.sh --verify
-      
-    # Setup build environment
-    - name: Setup Environment
-      run: |
         ./bins/build_tools.sh --setup
-        
+    
     # Build TrollStore
     - name: Build TrollStore
       run: |
         chmod +x bins/build_enhanced.sh
         ./bins/build_enhanced.sh
-        
-    # Run tests
+    
+    # Run tests and analysis
     - name: Run Tests
       run: |
         chmod +x bins/debug_helper.sh
         ./bins/debug_helper.sh build/TrollStore.app/TrollStore
-        
+    
     # Create packages
     - name: Create Packages
       run: |
@@ -47,16 +61,41 @@ jobs:
         cp -r ../build/TrollStore.app Payload/
         zip -r TrollStore.ipa Payload
         rm -rf Payload
-        
-    # Upload artifacts
+    
+    # Upload artifacts with v4
     - name: Upload IPA
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: TrollStore
         path: packages/TrollStore.ipa
-        
+        compression-level: 9
+        retention-days: 90
+    
     - name: Upload Debug Logs
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: DebugLogs
         path: bins/debug/logs/
+        compression-level: 9
+        retention-days: 90
+    
+    # Create GitHub Release
+    - name: Create Release
+      if: github.ref == 'refs/heads/main'
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          packages/TrollStore.ipa
+        name: Release ${{ github.sha }}
+        tag_name: v${{ github.run_number }}
+        body: |
+          TrollStore Build ${{ github.sha }}
+          
+          Changes in this release:
+          - Automated build from main branch
+          - Full debug logs included
+          - iOS 15-17 compatibility
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
