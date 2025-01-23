@@ -1,8 +1,8 @@
-Package: com.opa334.trollstore
-Name: TrollStore
+Package: com.opa334.trollstore.enhanced
+Name: TrollStore Enhanced
 Version: 2.1
 Architecture: iphoneos-arm
-Description: An awesome application!
+Description: Enhanced version of TrollStore with CVE-2023-42824 and CVE-2023-41991 exploits
 Maintainer: opa334
 Author: opa334
 Section: Utilities

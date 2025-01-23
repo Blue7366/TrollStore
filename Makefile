@@ -1,6 +1,10 @@
-TOPTARGETS := all clean
+all: pre_build make_roothelper make_trollstore make_trollhelper make_trollhelper_package assemble_trollstore make_trollhelper_embedded build_installer15 build_installer64e
 
-$(TOPTARGETS): pre_build make_roothelper make_trollstore make_trollhelper make_trollhelper_package assemble_trollstore make_trollhelper_embedded build_installer15 build_installer64e
+clean:
+		@rm -rf ./_build 2>/dev/null || true
+		@$(MAKE) -C ./RootHelper clean
+		@$(MAKE) -C ./TrollStore clean
+		@$(MAKE) -C ./TrollHelper clean
 
 pre_build:
 		@rm -rf ./_build 2>/dev/null || true
@@ -53,15 +57,19 @@ build_installer15:
 
 build_installer64e:
 		@mkdir -p ./_build/tmp64e
-		@unzip ./Victim/InstallerVictim.ipa -d ./_build/tmp64e
+		@unzip ./Victim/InstallerVictim64e.ipa -d ./_build/tmp64e
+		@cp ./TrollHelper/.theos/obj/TrollStorePersistenceHelper.app/TrollStorePersistenceHelper ./_build/TrollStorePersistenceHelperToInject
+		@pwnify set-cpusubtype ./_build/TrollStorePersistenceHelperToInject 2
+		@ldid -s -K./Victim/victim.p12 ./_build/TrollStorePersistenceHelperToInject
 		APP_PATH=$$(find ./_build/tmp64e/Payload -name "*" -depth 1) ; \
 		APP_NAME=$$(basename $$APP_PATH) ; \
 		BINARY_NAME=$$(echo "$$APP_NAME" | cut -f 1 -d '.') ; \
 		echo $$BINARY_NAME ; \
-		pwnify pwn64e ./_build/tmp64e/Payload/$$APP_NAME/$$BINARY_NAME ./TrollHelper/.theos/obj/TrollStorePersistenceHelper.app/TrollStorePersistenceHelper
+		pwnify pwn ./_build/tmp64e/Payload/$$APP_NAME/$$BINARY_NAME ./_build/TrollStorePersistenceHelperToInject
 		@pushd ./_build/tmp64e ; \
 		zip -vrD ../../_build/TrollHelper_arm64e.ipa * ; \
 		popd
+		@rm ./_build/TrollStorePersistenceHelperToInject
 		@rm -rf ./_build/tmp64e
 endif
 
@@ -105,4 +113,4 @@ before-package::
 after-install::
 	install.exec "killall \"TrollStore\" || true"
 
-.PHONY: $(TOPTARGETS) pre_build assemble_trollstore make_trollhelper_package make_trollhelper_embedded build_installer15 build_installer64e
+.PHONY: all pre_build assemble_trollstore make_trollhelper_package make_trollhelper_embedded build_installer15 build_installer64e

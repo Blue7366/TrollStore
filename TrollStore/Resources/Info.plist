@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>CFBundleExecutable</key>
-	<string>TrollStore</string>
+	<string>TrollStore Enhanced</string>
 	<key>CFBundleIcons</key>
 	<dict>
 		<key>CFBundlePrimaryIcon</key>
@@ -38,9 +38,13 @@
 		</dict>
 	</dict>
 	<key>CFBundleIdentifier</key>
-	<string>com.opa334.TrollStore</string>
+	<string>com.opa334.TrollStore.Enhanced</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>TrollStore Enhanced</string>
+	<key>CFBundleDisplayName</key>
+	<string>TrollStore Enhanced</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleSignature</key>
