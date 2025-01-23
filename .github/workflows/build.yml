@@ -19,6 +19,12 @@ jobs:
     
     - name: Install system dependencies
       run: |
+        # Add required repositories
+        sudo apt-get update
+        sudo apt-get install -y software-properties-common
+        sudo add-apt-repository -y ppa:deadsnakes/ppa
+        
+        # Install build dependencies
         sudo apt-get update
         sudo apt-get install -y \
           clang \
@@ -31,8 +37,13 @@ jobs:
           autoconf \
           lzma \
           xz-utils \
-          ldid \
           cmake
+          
+        # Install ldid from source
+        git clone https://github.com/ProcursusTeam/ldid.git
+        cd ldid
+        sudo make install
+        cd ..
         
     - name: Setup Theos
       run: |
