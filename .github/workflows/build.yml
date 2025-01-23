@@ -51,8 +51,8 @@ jobs:
         
     - name: Setup Theos
       run: |
-        # Clone Theos
-        git clone --recursive https://github.com/theos/theos.git $GITHUB_WORKSPACE/theos
+        # Clone specific version of Theos known to work
+        git clone --single-branch --branch 1.0 https://github.com/theos/theos.git $GITHUB_WORKSPACE/theos
         
         # Install SDK
         curl -LO https://github.com/theos/sdks/archive/refs/heads/master.zip
