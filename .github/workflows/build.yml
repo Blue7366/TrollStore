@@ -9,7 +9,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     
     steps:
     - uses: actions/checkout@v3
@@ -23,6 +23,7 @@ jobs:
         sudo apt-get install -y clang build-essential git wget fakeroot
         sudo apt-get install -y libtool automake autoconf
         sudo apt-get install -y libssl-dev zlib1g-dev
+        sudo apt-get install -y cmake pkg-config
         
     - name: Install ldid
       uses: MOZGIII/install-ldid-action@v1
@@ -64,6 +65,16 @@ jobs:
         export THEOS_PLATFORM_SDK_ROOT=/opt/ios-arm64e-clang-toolchain/SDK
         export SDKVERSION=16.2
         export SYSROOT=/opt/ios-arm64e-clang-toolchain/SDK/iPhoneOS16.2.sdk
+        export THEOS_PLATFORM_SDK_ROOT_arm64=/opt/ios-arm64e-clang-toolchain/SDK
+        export THEOS_PLATFORM_SDK_ROOT_arm64e=/opt/ios-arm64e-clang-toolchain/SDK
+        export PATH=/opt/ios-arm64e-clang-toolchain/bin:$PATH
+        
+        # Debug information
+        echo "Current directory: $(pwd)"
+        echo "THEOS: $THEOS"
+        echo "SDK Path: $SYSROOT"
+        ls -la $GITHUB_WORKSPACE/theos/sdks/
+        
         make package FINALPACKAGE=1 THEOS_PACKAGE_SCHEME=rootless
       
     - name: Upload Build Artifacts
