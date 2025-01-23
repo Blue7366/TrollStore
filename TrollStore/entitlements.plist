@@ -87,6 +87,8 @@
 	<true/>
 	<key>com.apple.private.xpc.launchd.userspace-reboot</key>
 	<true/>
+	<key>com.apple.private.xpc.service-configure</key>
+	<true/>
 	
 	<!-- iOS 17 Specific Capabilities -->
 	<key>com.apple.private.security.system-application-internal</key>
@@ -105,11 +107,19 @@
 	<integer>0</integer>
 	<key>com.apple.private.cs.debugger</key>
 	<true/>
+	<key>com.apple.private.security.system-application</key>
+	<true/>
+	<key>com.apple.system-task-ports</key>
+	<true/>
+	<key>com.apple.private.memorystatus</key>
+	<true/>
 	
 	<!-- Additional Root Capabilities -->
 	<key>com.apple.private.amfi.can-allow-non-platform</key>
 	<true/>
 	<key>com.apple.private.spawn-subsystem-root</key>
+	<true/>
+	<key>com.apple.private.security.disk-device-access</key>
 	<true/>
 	<key>com.apple.CommCenter.fine-grained</key>
 	<array>
